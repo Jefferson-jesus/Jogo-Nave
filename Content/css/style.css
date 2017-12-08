@@ -1,0 +1,21 @@
+body{
+    text-align: center;
+    background-color: rgb(216, 207, 207);
+}
+canvas{
+    border-color: crimson;    
+    margin-top: 15px;
+}
+
+.display-none{
+    display: none;
+}
+
+#link_jogar{
+    margin-top: 15px;
+    /* margin-left: 20px; */
+    float: left;
+}
+@media print{
+
+}

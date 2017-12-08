@@ -1,0 +1,274 @@
+<!DOCTYPE html />
+<html>
+<head>
+	<meta charset="utf-8" />
+    <title>Nave</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous" />
+    <link rel="stylesheet" href="Content/css/style.css" class="btn btn-primary"/>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+</head>
+<body>
+    <a href="javascript: Iniciar()" id="link_jogar" class="btn btn-primary btn-lg active" role="button" aria-pressed="true" >Jogar</a>
+    <h1>Pontos: <small id="pontosJogo"></small></h1>
+    <div class="container">
+        <canvas id="meu_canvas" width="1280" height="950"></canvas>
+    </div>
+    	
+    
+	<script>
+        function Iniciar(){            
+            x = 500;
+            y = 700;
+            ex = 280;
+            ey = 280;
+            pontos = 0;
+            pass = 0;
+            atirar = false;
+            explodirI = false;
+            naveExibir = true;
+            gameOver = false;
+            coluna = 0;
+            linha = 0;
+            balas = new Array();
+            iy = -128;
+            ix = Math.random() * 1140;
+            ivel = 6 - Math.random() * 4;
+            quadro = 0;
+            vidas = 3;      
+            colCora = 0;
+            navePass = 5;
+            somFundo = new Audio('sons/musica-acao.mp3');
+            canvas = document.getElementById("meu_canvas");
+            ctx = canvas.getContext("2d");
+            anterior = new Date().getTime();
+            somTiro = new Audio('sons/Tiro.mp3');
+            somExplodir = new Audio('sons/explosao.mp3');
+            requestAnimationFrame(Desenhar);
+        }
+        
+		function Fundo() {
+			var  fundo = new Image();            
+			fundo.src = 'Content/img/uniBlueRed.jpg';
+			fundo.onload = function () {
+				ctx.drawImage(fundo,0,0,1280,900);                              
+			}
+            if(atirar == true){
+                for(var c=0;c < balas.length;c++)
+                    balas[c].mover();
+            }            
+		}
+
+        function Fogo(){
+            if(naveExibir == true){
+                somTiro.currentTime = 10;
+                somTiro.play();
+                atirar = true;
+                balas[balas.length] = new Tiro();
+            }
+        }
+
+        function VidaCoracao(){
+            var  marcacao = new Image();
+            marcacao.src = './Content/img/coracao.png';           
+            marcacao.onload = function () {               
+                if(vidas > 0)
+                    ctx.drawImage(marcacao,colCora,2,50,50);    
+                if(vidas > 1)
+                    ctx.drawImage(marcacao,45,2,50,50);   
+                if(vidas > 2)
+                    ctx.drawImage(marcacao,90,2,50,50);
+                
+                if(vidas == 0)
+                    gameOver = true;                
+            }
+        }
+
+		function Nave() {
+            if(naveExibir == true && vidas > 0){
+                var nave = new Image();
+                nave.src = 'Content/img/naveDark.png';
+                nave.onload = function () {
+                    ctx.drawImage(nave, x, y, 120, 120);
+                }
+            }
+		}
+        
+		function Inimigo() {
+            if(gameOver == false && vidas > 0) {
+                var inimigo = new Image();
+                inimigo.src = 'Content/img/inimigoZika.png';
+                inimigo.onload = function () {
+                    ctx.drawImage(inimigo, ix, iy, 128, 128);
+                }
+                iy += ivel;
+                if (iy > 785) {
+                    iy = -128;
+                    ix = Math.random() * 1140;
+                    ivel = 6 - Math.random() * 4;
+                    navePass -= 1;
+                    console.log('ok');    
+                    if(pontos > 0)                
+                     pontos --;
+                    pass ++;
+                    if(pass >= 5){
+                        vidas --;
+                        pass = 0;
+                        console.log('reinicia pass.');
+                    }
+                }
+                if(iy>y-86 && iy < y+86){
+                    if(ix > x-64 && ix < x+64){
+                        explodirI = true;
+                        ex = x+20;
+                        ey = y;
+                        naveExibir = false;
+                        somExplodir.play();
+                        somExplodir.currentTime = 100;                        
+                    }
+                }
+            }
+        }
+
+		function Explodir(explode) {
+            if (explode == true) {
+                var explosao = new Image();
+                explosao.src = 'Content/img/explosao.png';
+                largura = 200;
+                altura = 200;
+                eex = 189 * coluna;
+                eey = 189 * linha;
+                explosao.onload = function () {
+                    ctx.drawImage(explosao, eex, eey,
+                        largura, altura, ex, ey,
+                        largura * 0.5, altura * 0.5
+                    );
+                }              
+
+                if(quadro < 6){
+                    quadro++;
+                } else {
+                    quadro = 0;
+                    coluna++;
+                }
+                if (linha == 0 && coluna == 5) {
+                    linha = 1;
+                    coluna = 0;
+                } else if (coluna > 1 && linha == 1) {
+                    coluna = 0;
+                    linha = 0;
+                    explodirI = false;                   
+                    if(naveExibir==false){
+                        vidas -= 1;                        
+                        if(vidas == 0){
+                            gameOver=true;
+                        } else{
+                            naveExibir = true;
+                        }                                     
+                    } else {
+                        naveExibir = true;
+                    }
+                }
+            }
+        }
+
+		function Tiro() {
+            this.xt = x;
+            this.yt = y;
+            this.mover = function () {
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(this.xt + 60, this.yt, 10, 30);
+                this.yt -= 3 * decorrido / 10;
+                if (this.a < 3) {
+                    this.yt = 700;
+                    balas.splice(0, 1);
+                }
+                if(this.xt>ix-64 && this.xt<ix+64){
+                    if(this.yt>iy && this.yt<iy+64){
+                        somExplodir.play();
+                        somExplodir.currentTime = 100;
+                        explodirI = true;
+                        ex = ix;
+                        ey = iy;
+                        this.yt = 700;
+                        balas.splice(0, 1);
+                        iy = -128;
+                        ix = Math.random() * 1140;
+                        ivel = 6 - Math.random() * 4;                       
+                        pontos ++;
+                    }
+                }
+            }
+        }
+		
+
+		function Desenhar() {
+            agora = new Date().getTime();
+            decorrido = agora - anterior;
+            Fundo();
+            VidaCoracao();
+            Nave();
+            Inimigo();
+            GameOver();
+            Explodir(explodirI);
+            for (var c = 0; c < balas.length; c++)
+                balas[c].mover();
+
+            anterior = agora;           
+            document.getElementById('pontosJogo').innerHTML = pontos;
+            if(gameOver == true) {
+                cancelAnimationFrame(Desenhar);
+                somFundo.pause();
+                GameOver();
+                setTimeout(window.location, 9000);
+            }else{
+                requestAnimationFrame(Desenhar);
+                somFundo.play();
+            }          
+        }     
+
+        function GameOver(){         
+            if(gameOver == true){
+                somFundo.pause();
+                var fundo = new Image();
+                fundo.src = './Content/img/gameover.png';
+                fundo.onload = function () {
+                    ctx.drawImage(fundo, 0, 0, 1280, 900);
+                }
+                somFim = new Audio('./sons/fim.mp3').play();                
+                explodirI = false;                
+                confirm('O jogo voltar a tela inicial!')? setTimeout(window.location, 10000): setTimeout(window.location, 9000);
+                
+            }          
+        }
+            
+        
+        //Iniciar();
+		document.addEventListener('keydown', function(evento) {
+			if ((evento.keyCode == 37 || evento.keyCode == 65) && x > 0) {
+				//Seta para esquerda
+				x-=20;
+			}
+            if((evento.keyCode == 39 || evento.keyCode == 68) && x < 1160) {
+				//seta para direita
+				x+=20;
+			}
+			if((evento.keyCode ==38 || evento.keyCode ==87) && y > 0){
+				y-=20;
+			}
+			if((evento.keyCode == 40  || evento.keyCode == 83) && y < 750){
+				y+=20;
+			}		
+            if(evento.keyCode == 32){
+                //barra de espeço
+                balas[balas.length] = new Tiro();
+                somTiro.currentTime = 5-Math.random()*0.5;
+                somTiro.play();
+            }            
+		});
+
+	</script>
+</body>
+</html>
+
